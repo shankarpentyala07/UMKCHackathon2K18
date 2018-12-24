@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- Mapper to tell the DAO location -->
+<mapper namespace="HackARoo.TeamAlpha.dao.MyBatisDAO">
+
+	<!-- Cache Implementation -->
+	<cache flushInterval="30000" readOnly="true" />
+
+	<!-- Result Map for SmsCodes Map -->
+	<resultMap id="DoctorQueueSmsCodesMap" type="HackARoo.TeamAlpha.view.DoctorQueueSmsCodes">
+		<result property="phoneNumber" column="PHONE_NUMBER" />
+		<result property="smsCode" column="SMS_CODE" />
+	</resultMap>
+
+	<!-- Result Map for Users Map -->
+	<resultMap id="DoctorQueueUsersMap" type="HackARoo.TeamAlpha.view.DoctorQueueUsers">
+		<result property="phoneNumber" column="PHONE_NUMBER" />
+		<result property="dateCreated" column="DATE_CREATED" />
+		<result property="receiveAlerts" column="RECEIVE_ALERTS" />
+	</resultMap>
+
+	<!-- Result Map for Doctors Map -->
+	<resultMap id="DoctorQueueDoctorsMap" type="HackARoo.TeamAlpha.view.DoctorQueueDoctors">
+		<result property="doctorId" column="DOCTOR_ID" />
+		<result property="doctorName" column="DOCTOR_NAME" />
+		<result property="doctorSpecialization" column="DOCTOR_SPECIALIZATION" />
+		<result property="doctorHospital" column="DOCTOR_HOSPITAL" />
+		<result property="doctorURL" column="DOCTOR_URL" />
+		<result property="doctorPhone" column="DOCTOR_PHONE_NUMBER" />
+	</resultMap>
+	
+	<!-- Result Map for Doctor_Users Map -->
+	<resultMap id="DoctorQueueWaitTimesMap" type="HackARoo.TeamAlpha.view.DoctorQueueWaitTimes">
+		<result property="phoneNumber" column="PHONE_NUMBER" />
+		<result property="waitTime" column="WAIT_TIME" />
+		<result property="reason" column="REASON" />
+		<result property="relationship" column="RELATION" />
+		<result property="doctorName" column="DOCTOR_NAME" />
+	</resultMap>
+
+	<delete id="deleteSmsCodeIfPresent" parameterType="String">
+		DELETE from DOCTOR_QUEUE_SMS_CODES WHERE PHONE_NUMBER =
+		#{smsCodePhoneNumber}
+	</delete>
+
+	<insert id="insertSmsCode" parameterType="map">
+		INSERT INTO DOCTOR_QUEUE_SMS_CODES (PHONE_NUMBER, SMS_CODE )
+		VALUES (#{smsCodePhoneNumberInsert}, #{randomCode})
+	</insert>
+
+	<select id="fetchSmsCodeByNum" parameterType="String"
+		resultMap="DoctorQueueSmsCodesMap">
+		SELECT PHONE_NUMBER, SMS_CODE FROM DOCTOR_QUEUE_SMS_CODES
+		WHERE PHONE_NUMBER = #{smsCodePhoneNumberFetch}
+	</select>
+
+	<select id="getUserDetails" parameterType="String" resultMap="DoctorQueueUsersMap">
+		SELECT PHONE_NUMBER, DATE_CREATED, RECEIVE_ALERTS FROM
+		DOCTOR_QUEUE_USERS
+		WHERE PHONE_NUMBER = #{getUserByNumber}
+	</select>
+	
+	<select id="getUsersWithRecieveStatus" parameterType="String" resultMap="DoctorQueueUsersMap">
+		SELECT PHONE_NUMBER FROM
+		DOCTOR_QUEUE_USERS
+		WHERE RECEIVE_ALERTS = #{recieveStatus}
+	</select>
+
+
+	<insert id="insertUser" parameterType="map">
+		INSERT INTO DOCTOR_QUEUE_USERS (PHONE_NUMBER, RECEIVE_ALERTS )
+		VALUES (#{insertUserNumber}, #{recieveAlerts})
+	</insert>
+
+	<update id="updateUser" parameterType="map">
+		UPDATE DOCTOR_QUEUE_USERS SET RECEIVE_ALERTS = #{recieveAlerts}
+		WHERE PHONE_NUMBER = #{updateUserNumber}
+	</update>
+
+	<select id="fetchDoctorsList" parameterType="map"
+		resultMap="DoctorQueueDoctorsMap">
+		SELECT DOCTOR_ID, DOCTOR_NAME, DOCTOR_SPECIALIZATION,
+		DOCTOR_HOSPITAL, DOCTOR_URL, DOCTOR_PHONE_NUMBER FROM DOCTOR_QUEUE_DOCTORS
+	</select>
+
+	<select id="fetchVisitorsCount" parameterType="map"
+	resultType="java.lang.Integer">
+		SELECT COUNT(DISTINCT  PHONE_NUMBER)
+		FROM DOCTOR_QUEUE_USERS_WAIT_TIMES
+		WHERE DOCTOR_ID = #{doctorId}
+		AND WAIT_TIME > 0
+	</select>
+	
+	<select id="fetchWaitTimes" parameterType="map"
+	resultType="java.lang.Integer">
+		SELECT MAX(WAIT_TIME)
+		FROM DOCTOR_QUEUE_USERS_WAIT_TIMES
+		WHERE DOCTOR_ID = #{doctorId}
+	</select>
+	
+	<select id="fetchDoctorQueueDetails" parameterType="map"
+	resultMap="DoctorQueueWaitTimesMap">
+		SELECT PHONE_NUMBER, WAIT_TIME, REASON, RELATION, DOCTOR_NAME
+		FROM DOCTOR_QUEUE_USERS_WAIT_TIMES
+		WHERE PHONE_NUMBER = #{queuePhoneNumber}
+		AND WAIT_TIME > 0
+	</select>
+	
+	<insert id="insertNewUserWaitTime" parameterType="map">
+		INSERT INTO DOCTOR_QUEUE_USERS_WAIT_TIMES (PHONE_NUMBER, WAIT_TIME, REASON, RELATION, DOCTOR_NAME, DOCTOR_ID)
+		VALUES (#{phoneNumber}, #{waitTimeNew}, #{reason}, #{relationship}, #{doctorName}, #{doctorId})
+	</insert>
+
+</mapper>
